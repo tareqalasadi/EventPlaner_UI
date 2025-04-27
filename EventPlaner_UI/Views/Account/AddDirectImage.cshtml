@@ -1,0 +1,73 @@
+﻿@model EventPlaner_UI.Models.DirectImageVeiwModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Direct Image</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link href="~/theme/ar/css/home.css" rel="stylesheet" />
+</head>
+<body>
+    <section class="get-in-touch">
+        <h1 class="title">Add Direct Image</h1>
+        <form asp-action="AddDirectImage" method="post" enctype="multipart/form-data" class="contact-form row">
+            <div class="form-field col-lg-6">
+                <label for="ImageNameEn">Image Name (English)</label>
+                <input asp-for="ImageNameEn" id="ImageNameEn" class="input-text js-input" type="text" required>
+                <span asp-validation-for="ImageNameEn" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-6">
+                <label for="ImageNameAr">Image Name (Arabic)</label>
+                <input asp-for="ImageNameAr" id="ImageNameAr" class="input-text js-input" type="text" required>
+                <span asp-validation-for="ImageNameAr" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-6">
+                <label for="DescriptionEn">Description (English)</label>
+                <input asp-for="DescriptionEn" id="DescriptionEn" class="input-text js-input" type="text" required>
+                <span asp-validation-for="DescriptionEn" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-6">
+                <label for="DescriptionAr">Description (Arabic)</label>
+                <input asp-for="DescriptionAr" id="DescriptionAr" class="input-text js-input" type="text" required>
+                <span asp-validation-for="DescriptionAr" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-6">
+                <label for="Price">Price</label>
+                <input asp-for="Price" id="Price" class="input-text js-input" type="text" required>
+                <span asp-validation-for="Price" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-6">
+                <label for="TypeService">Type of Service</label>
+                <input asp-for="TypeService" id="TypeService" class="input-text js-input" type="text" required>
+                <span asp-validation-for="TypeService" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-12">
+                <label for="Images">Image File</label>
+                <input asp-for="Images" id="Images" class="form-control-file" type="file" required>
+                <span asp-validation-for="Images" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-12">
+                <label for="ServiceId">Select Service</label>
+                <select asp-for="ServiceId" id="ServiceId" class="form-control">
+                    <option value="">-- Select Service --</option>
+                    @foreach (var service in Model.Services)
+                    {
+                        <option value="@service.Value">@service.Text</option>
+                    }
+                </select>
+                <span asp-validation-for="ServiceId" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-12">
+                <input class="submit-btn" type="submit" value="Submit">
+            </div>
+        </form>
+    </section>
+</body>
+</html>

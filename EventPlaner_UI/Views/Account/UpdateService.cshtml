@@ -1,0 +1,58 @@
+﻿@model Service
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Service</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link href="~/theme/ar/css/home.css" rel="stylesheet" />
+</head>
+<body>
+    <section class="get-in-touch">
+        <h1 class="title">Update Service</h1>
+        <form asp-action="UpdateService" method="post" enctype="multipart/form-data" class="contact-form row">
+            <input type="hidden" asp-for="ID" />
+            <div class="form-field col-lg-6">
+                <label for="ServiceNameEn">Service Name (English)</label>
+                <input asp-for="ServiceNameEn" id="ServiceNameEn" class="input-text js-input" type="text" required>
+                <span asp-validation-for="ServiceNameEn" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-6">
+                <label for="ServiceNameAr">Service Name (Arabic)</label>
+                <input asp-for="ServiceNameAr" id="ServiceNameAr" class="input-text js-input" type="text" required>
+                <span asp-validation-for="ServiceNameAr" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-6">
+                <label for="DescriptionEn">Description (English)</label>
+                <input asp-for="DescriptionEn" id="DescriptionEn" class="input-text js-input" type="text" required>
+                <span asp-validation-for="DescriptionEn" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-6">
+                <label for="DescriptionAr">Description (Arabic)</label>
+                <input asp-for="DescriptionAr" id="DescriptionAr" class="input-text js-input" type="text" required>
+                <span asp-validation-for="DescriptionAr" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-12">
+                <label for="ImageFile">Image File</label>
+                <input asp-for="Images" class="input-file js-input" type="file">
+                <span asp-validation-for="Image"  class="text-danger"></span>
+                @if (Model.Image != null && Model.Image.Length > 0)
+                {
+                    <div>
+                        <img src="data:image;base64,@Model.ImageBase64" alt="Service Image" class="img-thumbnail mt-2" />
+                    </div>
+                }
+            </div>
+            <div class="form-field col-lg-12">
+                <input class="submit-btn" type="submit" value="Update">
+            </div>
+        </form>
+    </section>
+</body>
+</html>

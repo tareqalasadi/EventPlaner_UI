@@ -1,0 +1,897 @@
+﻿@model List<PartyServices>
+@using EventPlaner_UI.Helper;
+@using EventPlaner_UI.Models;
+@using EventPlaner_UI.Helper.Loclizer;
+@using Microsoft.AspNetCore.Mvc.Localization;
+@using Newtonsoft.Json;
+@inject IViewLocalizer LocalizationManager;
+
+@{
+    ViewData["Title"] = LocalizationManager.GetString("PartyServicesTitile");
+    bool isEnglish = CultureHelper.IsEnglish; // Determine language on server-side
+}
+<style>
+    .card-footer {
+        gap: 10px; /* Space between checkbox and quantity selector */
+    }
+
+    .quantity-input {
+        max-width: 50px;
+        text-align: center;
+    }
+
+    .btn-decrement, .btn-increment {
+        padding: 0.25rem 0.5rem; /* Smaller buttons */
+    }
+
+</style>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <link href="~/assets/css/main.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <!-- LoadingOverlay Plugin -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/jquery-loading-overlay/2.1.7/loadingoverlay.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="~/js/loading.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+</head>
+<body>
+    <section id="party-services" class="section-bg">
+        <div class="container" data-aos="fade-up">
+            <div class="sections-header" style="margin-top:88px">
+                <p><span>@LocalizationManager.GetString("PartyServicesTitile")</span></p>
+            </div>
+            <div class="form-group d-flex align-items-center">
+                <i class="fas fa-search search-icon"></i>
+                <select class="form-control custom-select" id="typeService" name="TypeService">
+                    <option value="" disabled selected hidden>@LocalizationManager.GetString("FilterByServiceType")</option>
+                    @foreach (var serviceType in Model.Select(x => x.TypeService).Distinct())
+                    {
+                        <option value="@serviceType">@serviceType</option>
+                    }
+                </select>
+                <button id="clearButton" type="button" class="btn btn-clear clear-btn">@LocalizationManager.GetString("Clear")</button>
+            </div>
+
+            <div class="row gy-4" id="card-container">
+                <!-- Cards will be inserted here by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Show Image -->
+    <div class="modal fade" id="detailsModal" tabindex="-1" role="dialog" aria-labelledby="detailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h5 class="modal-title">@LocalizationManager["PartyImage"] </h5>
+                </div>
+                <div class="modal-body">
+                    <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
+                        <div class="carousel-inner" id="carouselInner">
+                            <!-- Carousel items will be inserted here by JavaScript -->
+                        </div>
+                        <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="sr-only">@LocalizationManager.GetString("Previous")</span>
+                        </a>
+                        <a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="sr-only">@LocalizationManager.GetString("Next")</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal Request -->
+    <!-- Modal -->
+    <div class="modal fade" id="RequestModal" tabindex="-1" role="dialog" aria-labelledby="RequestModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <form id="requestForm">
+                    <!-- Modal Header -->
+                    <div class="modal-header" style="background-color: #729e92; color: white;">
+                        <h5 class="modal-title">
+                            @LocalizationManager.GetString("headerRequst")
+                            <i class="fas fa-cocktail"></i>
+                            <i class="fas fa-calendar-alt"></i>
+                        </h5>
+
+                        <button type="button" class="close" onclick="CloseRequst()" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <!-- Modal Body -->
+                    <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+                        <!-- Color Picker -->
+                        <div class="form-group" style="text-align: @(isEnglish ? "left" : "right");">
+                            <label for="favcolor">
+                                <i class="fas fa-palette"></i> @LocalizationManager.GetString("ChangeThemeColor")
+                            </label>
+                            <input type="color" id="favcolor" name="favcolor" class="color-picker-input ">
+                        </div>
+
+                        <div class="form-group" style="text-align: @(isEnglish ? "left" : "right");">
+                            <label for="cityId" class="required"><i class="fas fa-leaf"></i> @LocalizationManager.GetString("TypeofRose")</label>
+                            <select id="flowersType" class="form-control" style="width: 45%;  @(isEnglish ? "left" : "right");" multiple>
+                                <option value="" disabled>@Html.Raw(LocalizationManager.GetString("SelectTypeofRose"))</option>
+                            </select>
+
+                        </div>
+
+                        <!-- Zafeh Checkbox -->
+                        @if (Model.FirstOrDefault().IsZafaIncluded)
+                        {
+                            <div class="form-group" style="text-align: @(isEnglish ? "left" : "right");">
+                                <label for="zafehCheckbox"><i class="fas fa-music"></i> @LocalizationManager.GetString("ZafehCheckbox")</label>
+                                <input type="checkbox" id="zafehCheckbox" class=" custom-checkboxx">
+                            </div>
+                        }
+
+                        <!-- Friends Assistance -->
+                        @if (Model.FirstOrDefault().IsFriendAssistanceNeeded)
+                        {
+                            <div class="form-group" style="text-align: @(isEnglish ? "left" : "right");">
+                                <label for="friendsCheckbox"><i class="fas fa-users"></i> @LocalizationManager.GetString("FriendsCheckbox")</label>
+                                <input type="checkbox" id="FriendsCheckbox" class=" custom-checkboxx">
+                            </div>
+
+                            <div id="GenderAndCountFriends" class="form-group" style="text-align: @(isEnglish ? "left" : "right");">
+
+                                <label><i class="fas fa-venus-mars"></i> @LocalizationManager["GenderFriendLabel"]</label>
+                                <div class="d-flex align-items-center">
+                                    <div class="custom-control custom-radio mr-3">
+                                        <input type="radio" style="opacity:1" id="genderMale" onclick="ValidateSubmitModel('Frinds')" name="Gender" value="1" class="custom-control-input">
+                                        <label for="genderMale">@LocalizationManager["Male"]</label>
+                                    </div>
+                                    <div class="custom-control custom-radio">
+                                        <input type="radio" style="opacity:1" id="genderFemale" onclick="ValidateSubmitModel('Frinds')" name="Gender" value="2" class="custom-control-input">
+                                        <label for="genderFemale">@LocalizationManager["Female"]</label>
+                                    </div>
+                                    <span id="FriendGenderValidation" class="text-danger"></span>
+                                </div>
+
+                                <!-- Count -->
+                                <label><i class="fas fa-user-friends"></i> @LocalizationManager["FriendCountLabel"]</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <button type="button" class="btn btn-outline-secondary" id="decrementCount">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                    </div>
+                                    <input type="text" class="form-control" id="count" name="Count" value="1" readonly>
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-outline-secondary" id="incrementCount">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Photographer -->
+                        @if (Model.FirstOrDefault().IsPhotographerIncluded)
+                        {
+
+                            <div class="form-group" style="text-align: @(isEnglish ? "left" : "right");">
+                                <label for="photographerCheckbox"><i class="fas fa-camera"></i> @LocalizationManager.GetString("PhotographerCheckbox")</label>
+                                <input type="checkbox" id="PhotographerCheckbox" class=" custom-checkboxx">
+                            </div>
+
+                            <div id="GenderPhotographer">
+                                <label><i class="fas fa-venus-mars"></i> @LocalizationManager["GenderLabel"]</label>
+
+                                <div class="d-flex align-items-center">
+
+
+                                    <div class="custom-control custom-radio mr-3">
+                                        <input type="radio" id="genderPhotographerMale" name="GenderPhotographer" onclick="ValidateSubmitModel('photographer')" value="1" style="opacity:1" class="custom-control-input">
+                                        <label for="genderPhotographerMale">@LocalizationManager["Male"]</label>
+                                    </div>
+                                    <div class="custom-control custom-radio">
+                                        <input type="radio" style="opacity:1" id="genderPhotographerFemale" onclick="ValidateSubmitModel('photographer')" name="GenderPhotographer" value="2" class="custom-control-input">
+                                        <label for="genderPhotographerFemale">@LocalizationManager["Female"]</label>
+                                    </div>
+                                    <span id="PhotographerGenderValidation" class="text-danger"></span>
+                                </div>
+
+                            </div>
+                        }
+
+                        <!-- Sweet Collection -->
+                        @if (Model.FirstOrDefault().IsSweetCollectionIncluded)
+                        {
+                            <div class="form-group" style="text-align: @(isEnglish ? "left" : "right");">
+                                <label for="SweetCollectionCheckbox"><i class="fas fa-candy-cane"></i> @LocalizationManager.GetString("SweetCollectionCheckbox")</label>
+                                <input type="checkbox" id="sweetPackagingCount" onchange="handleCheckboxChange(this, 9)" class=" custom-checkboxx">
+                            </div>
+                        }
+
+                        <!-- Bridal Bouquet -->
+                        @if (Model.FirstOrDefault().IsBridalBouquetIncluded)
+                        {
+                            <div class="form-group" style="text-align: @(isEnglish ? "left" : "right");">
+                                <label for="bridalBouquetCheckbox"><i class="fas fa-seedling"></i> @LocalizationManager.GetString("BridalBouquetCheckbox")</label>
+                                <input type="checkbox" id="bridalBouquetCheckbox" onchange="handleCheckboxChange(this, 13)" class=" custom-checkboxx">
+                            </div>
+                        }
+
+                        <!-- Cake -->
+                        @if (Model.FirstOrDefault().IsCakeIncluded)
+                        {
+                            <div class="form-group" style="text-align: @(isEnglish ? "left" : "right");">
+                                <label for="cakeCheckbox"><i class="fas fa-birthday-cake"></i> @LocalizationManager.GetString("CakeCheckbox")</label>
+                                <input type="checkbox" id="cakeCheckbox" onchange="handleCheckboxChange(this, 14)" class=" custom-checkboxx">
+                            </div>
+                        }
+
+                        <!-- Food -->
+                        @if (Model.FirstOrDefault().IsFoodIncluded)
+                        {
+                            <div class="form-group" style="text-align: @(isEnglish ? "left" : "right");">
+                                <label for="FoodCheckbox"><i class="fas fa-cutlery"></i> @LocalizationManager.GetString("DoYouWantFood")</label>
+                                <input type="checkbox" id="FoodCheckbox" class=" custom-checkboxx">
+                            </div>
+                            <div id="FoodAndCount">
+                                <!-- Count -->
+                                <label><i class="fas fa-user-friends"></i> @LocalizationManager["InvitationsCount"]</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <button type="button" class="btn btn-outline-secondary" id="FooddecrementCount">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                    </div>
+                                    <input type="text" class="form-control" id="Foodcount" name="Count" value="1" readonly>
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-outline-secondary" id="FoodincrementCount">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Customer Info -->
+                        <div class="form-group" style="text-align: @(isEnglish ? "left" : "right");">
+                            <label for="customerName" class="required"><i class="fas fa-user"></i>@LocalizationManager["YourNameLabel"]</label>
+                            <input type="text" class="form-control" id="customerName" name="CustomerName" placeholder="@LocalizationManager["YourNameLabel"]">
+                        </div>
+                        <div class="form-group" style="text-align: @(isEnglish ? "left" : "right");">
+                            <label for="phoneNumber" class="required"><i class="fas fa-phone-alt"></i>@LocalizationManager["PhoneNumberLabel"]</label>
+                            <input type="tel" class="form-control" id="phoneNumber" name="PhoneNumber" placeholder="@LocalizationManager["PhoneNumberPlaceholder"]" inputmode="numeric" pattern="[0-9]*">
+                        </div>
+                        <div class="form-group" style="text-align: @(isEnglish ? "left" : "right");">
+                            <label for="email" class="required"><i class="fas fa-envelope"></i> Your Email</label>
+                            <input type="email" class="form-control" id="email" name="Email" placeholder="example@domain.com">
+                        </div>
+                        <div class="form-group" style="text-align: @(isEnglish ? "left" : "right");">
+                            <label for="cityId" class="required"><i class="fas fa-city"></i>@LocalizationManager["CityLabel"]</label>
+                            <select class="form-control" id="cityId" name="CityId">
+                                <option value="" disabled selected>@LocalizationManager["SelectCityPlaceholder"]</option>
+                                <option value="1">Amman</option>
+                                <option value="2">Irbid</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="text-align: @(isEnglish ? "left" : "right");">
+                            <label for="startDate" class="required"><i class="fas fa-calendar-alt"></i>@LocalizationManager["RequestDateLabel"]</label>
+                            <input type="text" class="form-control" id="startDate" name="StartDate" placeholder="@LocalizationManager["RequestDateLabel"]">
+                        </div>
+                        <div class="form-group" style="text-align: @(isEnglish ? "left" : "right");">
+                            <label for="note"><i class="fas fa-comment"></i> @LocalizationManager["Note"]</label>
+                            <textarea class="form-control" id="note" name="Note" placeholder="@LocalizationManager["Note"]"></textarea>
+                        </div>
+
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="modal-footer" style="background-color: #f1f1f1;">
+                        <button type="button" class="btn btn-secondary" onclick="CloseRequst()">@LocalizationManager.GetString("Close")</button>
+                        <button type="submit" id="submitRequestBtn" class="btn btn-primary" style="background-color: #729e92; border: none;">@LocalizationManager["SubmitButtonText"]</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Show Service Image -->
+
+    <div class="modal fade" id="DirectRequestModal" tabindex="-1" role="dialog" aria-labelledby="DirectRequestModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-fullscreen" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        @LocalizationManager.GetString("chooseStyle")
+                        <i class="fas fa-check-circle"></i>
+                    </h5>
+                    <button type="button" class="close" onclick="CloseDirect()" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+
+                <div class="modal-body" id="modal-body-content">
+                    <!-- The content loaded from the partial view will appear here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="submit-button" class="btn btn-secondary">@LocalizationManager["SubmitButtonText"]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        const isEnglish = @isEnglish.ToString().ToLower();
+        const itemsPerPage = 3;
+        let currentPage = 0;
+        let selectedCardId = 0;
+        let selectedServiceName = null;
+        let selectedMainImage = null;
+        $('#next-icon').click(function () {
+            if ((currentPage + 1) * itemsPerPage < items.length) {
+                currentPage++;
+                displayItems(currentPage, $('#typeService').val());
+            }
+        });
+
+        $('#prev-icon').click(function () {
+            if (currentPage > 0) {
+                currentPage--;
+                displayItems(currentPage, $('#typeService').val());
+            }
+        });
+
+        document.getElementById('PhotographerCheckbox').addEventListener('change', function () {
+            var PhotographerDiv = document.getElementById('GenderPhotographer');
+            PhotographerDiv.style.display = this.checked ? 'block' : 'none';
+        });
+
+        document.getElementById('FriendsCheckbox').addEventListener('change', function () {
+            var GenderAndCountFriendsDiv = document.getElementById('GenderAndCountFriends');
+            GenderAndCountFriendsDiv.style.display = this.checked ? 'block' : 'none';
+        });
+
+
+        document.getElementById('FoodCheckbox').addEventListener('change', function () {
+            var FoodAndCountDiv = document.getElementById('FoodAndCount');
+            FoodAndCountDiv.style.display = this.checked ? 'block' : 'none';
+        });
+
+
+        function RequestModel(serviceId) {
+            $("#RequestModal").modal('show');
+        }
+        function handleCheckboxChange(checkbox, serviceId) {
+            if (checkbox.checked) {
+                GetDirectRequestImages(serviceId);
+            }
+        }
+        let selectedServices = [];
+
+        function updateMainView(image, price, name, serviceID, quantity) {
+            debugger;
+
+            const serviceNameEn = name;
+            const serviceNameAr = name;
+            const mainImage = image;
+            const serviceId = serviceID;
+            const Price = price;
+            const quanti = quantity;
+            const newService = {
+                ServiceId: serviceId,
+                serviceNameEn: serviceNameEn,
+                serviceNameAr: serviceNameAr,
+                MainImage: mainImage,
+                Price: Price,
+                Count: quanti
+            };
+            selectedServices.push(newService);
+
+        }
+
+        async function GetDirectRequestImages(serviceId) {
+            const url = '@Url.Action("DirectRequestPartial", "Home")?Id=' + serviceId;
+            debugger;
+
+            $.LoadingOverlay("show", {
+                image: "",
+                fontawesome: "fa fa-spinner fa-spin",
+                size: "40px",
+                background: "rgba(0, 0, 0, 0.2)",
+                text: "Loading...",
+                textColor: "#729e92",
+                imageColor: "#729e92"
+            });
+            try {
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const htmlContent = await response.text();
+
+                document.getElementById('modal-body-content').innerHTML = htmlContent;
+
+                $.getScript('@Url.Content("~/js/site.js")', function () {
+                    $.LoadingOverlay("hide");
+                    var submitButton = document.getElementById('submit-button');
+                    if (submitButton) {
+                        submitButton.disabled = true;
+                    } $('#DirectRequestModal').modal('show');
+                });
+            } catch (error) {
+                $.LoadingOverlay("hide");
+            }
+        }
+
+
+        function CloseRequst() {
+            $('#RequestModal').modal('hide');
+            $('#GenderPhotographer').modal('hide');
+            $('#GenderAndCountFriends').modal('hide');
+            $('#FoodAndCount').modal('hide');
+            document.getElementById('requestForm').reset();
+
+        }
+
+        function CloseDirect() {
+            const checkboxes = document.querySelectorAll('.chef-member input[type="checkbox"]');
+            const isAnyChecked = Array.from(checkboxes).some(cb => cb.checked);
+            if (!isAnyChecked)
+                $('#bridalBouquetCheckbox').prop('checked', false);
+
+
+            $('#DirectRequestModal').modal('hide');
+        }
+
+        function toggleFavorite(id) {
+            const icon = $(`#heart-icon-${id}`);
+            icon.toggleClass('active');
+            const cardElement = $(`.luxury-card[data-id='${id}']`);
+            selectedMainImage = cardElement.find(".card-img").attr("src");
+            selectedCardId = id;
+            selectedServiceName = cardElement.find('.card-title').text();
+            $("#RequestModal form")[0].reset();
+            $("#RequestModal").modal('show');
+
+        }
+        $(document).ready(function () {
+
+            const flowerOptions = [
+                { id: "Gorgeous", text: "@Html.Raw(LocalizationManager.GetString("Gorgeous"))" },
+                { id: "Narcissus", text: "@Html.Raw(LocalizationManager.GetString("Narcissus"))" },
+                { id: "Violet", text: "@Html.Raw(LocalizationManager.GetString("Violet"))" }
+            ];
+
+            $('#flowersType').select2({
+                data: flowerOptions,
+                placeholder: "@Html.Raw(LocalizationManager.GetString("SelectTypeofRose"))",
+                allowClear: true,
+                width: '100%',
+                multiple: true
+            });
+            $('#flowersType').on('change', function () {
+                const flowersType = $(this).val();
+                console.log("Selected Flowers:", flowersType);
+            });
+            flatpickr("#startDate", {
+                dateFormat: "d/m/Y h:i K", // Date and time format with 12-hour clock and AM/PM
+                minDate: new Date().fp_incr(1), // Minimum date is tomorrow
+                enableTime: true, // Enable time selection
+                time_24hr: false, // Use 12-hour format with AM/PM
+            });
+            $('html, body').scrollTop(0);
+            $('[data-toggle="tooltip"]').tooltip();
+            $("#clearButton").hide();
+            var PhotographerDiv = document.getElementById('GenderPhotographer');
+            PhotographerDiv.style.display = 'none';
+
+            var GenderAndCountFriendsDiv = document.getElementById('GenderAndCountFriends');
+            GenderAndCountFriendsDiv.style.display = 'none';
+
+            var FoodAndCountDiv = document.getElementById('FoodAndCount');
+            FoodAndCountDiv.style.display = 'none';
+
+            const items = @Html.Raw(JsonConvert.SerializeObject(Model))
+                    const itemsPerPage = 3;
+            let currentPage = 0;
+            displayItems(currentPage, $('#typeService').val());
+            const isEnglish = @isEnglish.ToString().ToLower();
+
+            function displayItems(page, filterTypeService = "") {
+                $('#card-container').empty();
+                const filteredItems = filterTypeService ? items.filter(item => item.TypeService === filterTypeService) : items;
+                const start = page * itemsPerPage;
+                const end = start + itemsPerPage;
+                const pageItems = filteredItems.slice(start, end);
+
+                pageItems.forEach(item => {
+                    const mainImageSrc = item.MainImageBase64 ? `data:image/jpeg;base64,${item.MainImageBase64}` : 'default-image.jpg';
+
+                    $('#card-container').append(`
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="luxury-card" data-toggle="modal" data-target="#detailsModal" data-id="${item.Id}" data-name="${item.ServiceNameEn}" data-images='${JSON.stringify(item.ImageListBase64)}'>
+                            <div class="card-front">
+                                <img src="${mainImageSrc}" alt="${item.ServiceNameEn}" class="card-img">
+                                <div class="card-content">
+                                    <h5 class="card-title">${item.ServiceNameEn}</h5>
+                                </div>
+                            </div>
+                        </div>
+                                                   <div class="card-footer">
+                    <div class="interactive-container" onclick="toggleFavorite(${item.Id})">
+                        <div class="click-message">
+                                    <span class="click-text">@LocalizationManager.GetString("BookNow") </span>
+                            <i class="fas fa-hand-point-right"></i>
+                        </div>
+                        <i class="fas fa-heart" id="heart-icon-${item.Id}"></i>
+                        <span class="heart-tooltip">@LocalizationManager.GetString("SubmitButtonText")</ span >
+                    </div>
+                </div>
+
+                </div>
+
+
+
+                    </div>
+                `);
+
+                });
+            }
+
+            $('#typeService').change(function () {
+                currentPage = 0;
+                displayItems(currentPage, $(this).val());
+                $("#clearButton").show();
+
+            });
+
+            $('#clearButton').click(function () {
+                $('#typeService').val('');
+                displayItems(currentPage);
+                $("#clearButton").hide();
+
+            });
+
+            $('#card-container').on('click', '.luxury-card', function () {
+                debugger;
+                const images = $(this).data('images');
+                const serviceName = $(this).data('name');
+
+
+
+                $('#serviceName').text(serviceName);
+
+                $('#carouselInner').empty();
+                if (images.length > 0) {
+                    images.forEach((img, index) => {
+                        $('#carouselInner').append(`
+                                        <div class="carousel-item${index === 0 ? ' active' : ''}">
+                                            <img src="data:image/jpeg;base64,${img}" class="d-block w-100" alt="...">
+                                        </div>
+                                    `);
+                    });
+                } else {
+                    $('#carouselInner').append(`
+                                    <div class="carousel-item active">
+                                        <img src="default-image.jpg" class="d-block w-100" alt="...">
+                                    </div>
+                                `);
+                }
+            });
+
+            $('#decrementCount').click(function () {
+                const countInput = $('#count');
+                let count = parseInt(countInput.val());
+                if (count > 1) {
+                    countInput.val(count - 1);
+                }
+            });
+
+            $('#incrementCount').click(function () {
+                const countInput = $('#count');
+                let count = parseInt(countInput.val());
+                countInput.val(count + 1);
+            });
+
+
+            $('#FooddecrementCount').click(function () {
+                const countInput = $('#Foodcount');
+                let count = parseInt(countInput.val());
+                if (count > 1) {
+                    countInput.val(count - 1);
+                }
+            });
+
+            $('#FoodincrementCount').click(function () {
+                const countInput = $('#Foodcount');
+                let count = parseInt(countInput.val());
+                countInput.val(count + 1);
+            });
+
+
+
+            $('#submitRequestBtn').click(function (event) {
+                event.preventDefault();
+                var x = ValidateSubmitModel('');
+                var hasError = false;
+
+                var customerName = $('#customerName').val();
+                var phoneNumber = $('#phoneNumber').val();
+                var email = $('#email').val();
+                var cityId = $('#cityId').val();
+                var startDate = $('#startDate').val();
+                var flowersType = $('#flowersType').val();
+                var isZafehIncluded = $('#zafehCheckbox').is(':checked');
+                var isPhotographerIncluded = $('#PhotographerCheckbox').is(':checked');
+                var isFriendsIncluded = $('#FriendsCheckbox').is(':checked');
+                var isFoodIncluded = $('#FoodCheckbox').is(':checked');
+                var friendCount = $('#count').val();
+                var isSweetIncluded = $('#sweetPackagingCount').is(':checked');
+                var isBridalBouquetIncluded = $('#bridalBouquetCheckbox').is(':checked');
+                var isCakeIncluded = $('#cakeCheckbox').is(':checked');
+                var note = $('#note').val();
+                var ThemColor = $("#favcolor").val();
+                var genderFriend = $('input[name="Gender"]:checked').val();
+                var genderPhotographer = $('input[name="GenderPhotographer"]:checked').val();
+                var Foodcount = $('#Foodcount').val();
+
+                if (customerName === '') {
+                    Swal.fire('Please enter your name');
+                    hasError = true;
+                }
+                if (phoneNumber === '') {
+                    Swal.fire('Please enter your phone number');
+                    hasError = true;
+                }
+                if (email === '') {
+                    Swal.fire('Please enter your email');
+                    hasError = true;
+                }
+                if (cityId === null) {
+                    Swal.fire('Please select a city');
+                    hasError = true;
+                }
+                if (startDate === '') {
+                    Swal.fire('Please select a date');
+                    hasError = true;
+                }
+
+                if (!hasError) {
+                    var formData = {
+                        ID: 0,
+                        ServiceId: selectedCardId,
+                        serviceName: selectedServiceName,
+                        MainImage: selectedMainImage,
+                        ThemeColor: ThemColor,
+                        GenderFriend: genderFriend,
+                        GenderPhotographer: genderPhotographer,
+                        CustomerName: customerName,
+                        PhoneNumber: phoneNumber,
+                        Email: email,
+                        CityId: parseInt(cityId),
+                        StartDate: startDate,
+                        FlowersType: flowersType,
+                        WithZafa: isZafehIncluded,
+                        WithPhotographer: isPhotographerIncluded,
+                        WithFreind: isFriendsIncluded,
+                        WithFood: isFoodIncluded,
+                        CountOfFreind: friendCount,
+                        Foodcount: Foodcount,
+                        WithSweetPackaging: isSweetIncluded,
+                        WithBridalBouquet: isBridalBouquetIncluded,
+                        WithCake: isCakeIncluded,
+                        Note: note,
+                        ServiceList: selectedServices
+                    };
+                    console.log("data is :" + JSON.stringify(formData))
+                    $.ajax({
+        url: '@Url.Action("SubmitPartyForm", "Home")',
+                            method: 'POST',
+                        data: JSON.stringify(formData),
+                        contentType: 'application/json; charset=UTF-8',
+                        success: function (response) {
+                            Swal.fire('Your request has been sent successfully. We will contact you shortly.');
+                            $('#RequestModal').modal('hide');
+                        },
+                        error: function (error) {
+                            Swal.fire('An error occurred while submitting the request. Please try again.');
+                        }
+                    });
+                }
+            });
+
+
+            function CloseRequest() {
+                $('#RequestModal').modal('hide');
+            }
+
+        });
+
+        document.getElementById('submit-button').addEventListener('click', function () {
+            collectSelectedServices();
+        });
+
+        function collectSelectedServices() {
+            debugger
+
+            document.querySelectorAll('.select-item:checked').forEach(checkbox => {
+                const cardElement = checkbox.closest('.chef-member');
+                const serviceID = cardElement.getAttribute('data-serviceid');
+                const selectedImage = cardElement.getAttribute('data-image');
+                const selectedPrice = cardElement.getAttribute('data-price');
+                const selectedName = cardElement.querySelector('.member-infoo p').innerText;
+                const quantityInput = cardElement.querySelector('.quantity-input');
+                const quantity = quantityInput ? parseInt(quantityInput.value) : 1;
+
+                const newService = {
+                    ServiceId: serviceID,
+                    ServiceNameEn: selectedName,
+                    ServiceNameAr: selectedName,
+                    MainImage: selectedImage,
+                    Price: selectedPrice,
+                    Count: quantity
+                };
+
+                selectedServices.push(newService);
+            });
+
+
+            $('#DirectRequestModal').modal('hide');
+
+        }
+
+        function handleFileUpload(event) {
+            debugger;
+            const files = event.target.files;
+            const uploadContainer = document.getElementById('uploadProgressContainer');
+
+            uploadContainer.innerHTML = '';
+
+            Array.from(files).forEach((file, index) => {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const progressDiv = document.createElement('div');
+                progressDiv.classList.add('upload-progress', 'mb-2');
+
+                const progressBar = document.createElement('div');
+                progressBar.classList.add('progress-bar');
+                progressBar.style.width = '0%';
+                progressBar.style.height = '20px';
+                progressBar.style.backgroundColor = '#4caf50';
+
+                const progressText = document.createElement('span');
+
+                progressDiv.appendChild(progressText);
+                progressDiv.appendChild(progressBar);
+                uploadContainer.appendChild(progressDiv);
+
+                uploadFile(formData, progressBar, file.name);
+            });
+        }
+
+        function uploadFile(formData, progressBar, fileName) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '@Url.Action("UploadDesign", "Home")');
+
+            xhr.upload.onprogress = function (event) {
+                if (event.lengthComputable) {
+                    const percentComplete = (event.loaded / event.total) * 100;
+                    progressBar.style.width = `${percentComplete}%`;
+                    progressBar.innerText = `${Math.round(percentComplete)}%`;
+                }
+            };
+
+            xhr.onload = function () {
+                const uploadProgressContainer = document.getElementById('uploadProgressContainer');
+
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.success) {
+                        progressBar.style.width = '34%';
+                        progressBar.style.backgroundColor = '#28a745';
+                        progressBar.innerText = `Complete 100%`;
+                        Swal.fire({
+                            icon: 'success',
+                            title: "@LocalizationManager.GetString("UploadSuccessTitle")",
+                            text: "@LocalizationManager.GetString("UploadSuccessMessage")",
+                            confirmButtonText: "@LocalizationManager.GetString("OkButton")"
+                        });
+
+                    } else {
+                        progressBar.style.backgroundColor = '#dc3545';
+                        progressBar.innerText = `Failed: ${fileName}`;
+                    }
+                } else {
+                    progressBar.style.backgroundColor = '#dc3545';
+                    progressBar.innerText = `Failed: ${fileName}`;
+                }
+            };
+
+            xhr.onerror = function () {
+                progressBar.style.backgroundColor = '#dc3545';
+                progressBar.innerText = `Error: ${fileName}`;
+            };
+
+            xhr.send(formData);
+        }
+
+
+        function ValidateSubmitModel(Feild) {
+            var HasNotError = true;
+            if (Feild == 'Frinds' || Feild == '') {
+                const FriendsCheckbox = document.getElementById('FriendsCheckbox');
+                if (FriendsCheckbox.checked) {
+                    const selectedGender = document.querySelector('input[name="Gender"]:checked'); 
+                    if (!selectedGender) {
+                        HasNotError = false;
+                        $("#FriendGenderValidation").text('@Html.Raw(LocalizationManager.GetString("ValidationMessage"))');
+                    } else {
+                        $("#FriendGenderValidation").text('');
+
+                    }
+                }
+                else {
+                    $("#FriendGenderValidation").text('');
+                }
+            }
+
+            if (Feild == 'photographer' || Feild == '') {
+                const photographerCheckbox = document.getElementById('PhotographerCheckbox');
+                if (photographerCheckbox.checked) {
+                    const selectedGender = document.querySelector('input[name="GenderPhotographer"]:checked'); 
+                    if (!selectedGender) {
+                        HasNotError = false;
+                        $("#PhotographerGenderValidation").text('@Html.Raw(LocalizationManager.GetString("ValidationMessage"))');
+                    } else {
+                        $("#PhotographerGenderValidation").text('');
+
+                    }
+                }
+                else {
+                    $("#PhotographerGenderValidation").text('');
+                }
+            }
+
+
+
+
+
+
+        }
+
+    </script>
+</body>
+</html>

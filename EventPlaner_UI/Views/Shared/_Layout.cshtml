@@ -1,0 +1,163 @@
+﻿@using  EventPlaner_UI.Helper;
+@using Microsoft.AspNetCore.Mvc.Localization;
+@inject IViewLocalizer LocalizationManager;
+@using EventPlaner_UI.Helper.Loclizer;
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+ 
+  <meta content="" name="description">
+  <meta content="" name="keywords">
+
+  <!-- Favicons -->
+    <link href="@Url.Content("~/Theme/ar/Images/Logo.jpeg")" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600;1,700&family=Amatic+SC:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="~/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="~/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="~/assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="~/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="~/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Custon CSS -->
+   <link href="@Url.Content("~/Theme/" + CultureHelper.CultureName + "/css/Home.css")" rel="stylesheet" />
+
+
+  <!-- Template Main CSS File -->
+  <link href="~/assets/css/main.css" rel="stylesheet">
+</head>
+<body>
+  <!-- ======= Header ======= -->
+  <header id="header" class="header fixed-top d-flex align-items-center" style="height:auto">
+    <div class="container d-flex align-items-center justify-content-between">
+
+     @* <a href="index.html" class="logo d-flex align-items-center me-auto me-lg-0">
+        <!-- Uncomment the line below if you also wish to use an image logo -->
+        <!-- <img src="assets/img/logo.png" alt=""> -->
+        <h1>Yummy<span>.</span></h1>
+      </a>*@
+      <a class="nav-link font-weight-bold text-uppercase" href="@Url.Action("Index", "Home")">
+                <img class="display-flex-center zmdi zmdi-facebook" style="height:auto;width:130px" src="@Url.Content("~/Theme/ar/Images/Logo.jpeg")" title="@LocalizationManager.GetString("OctopusEvent")">
+      </a>
+              
+
+
+      <nav id="navbar" class="navbar">
+        <ul>
+                    <li><a  href="@Url.Action("Index", "Home")">@LocalizationManager.GetString("Home")</a></li>
+          <li><a href="#about">@LocalizationManager.GetString("AboutUs")</a></li>
+          <li><a href="#services">@LocalizationManager.GetString("OurServices")</a></li>
+
+
+                    <li><a href="#events">@LocalizationManager["Events"] </a></li>
+
+                    <li><a href="#gallery">@LocalizationManager["Gallery"]</a></li>
+                    <li><a href="#contact">@LocalizationManager["Contactus"]</a></li>
+          <li class="nav-item">
+                            <a id="SwitchLang" class="nav-link font-weight-bold text-uppercase" href="@Url.Action("SwitchLanguage", "Lang", new { cluture = LocalizationManager.GetString("OtherLanguageKey"), returnUrl = ViewContext.HttpContext.Request.Path })">
+                                <img class="display-flex-center zmdi zmdi-facebook" width="60" height="46" src="@Url.Content("~/Theme/ar/Images/TranslateLogo.png")" title="@LocalizationManager.GetString("Language")">
+                            </a>
+                        </li>
+
+        </ul>
+      </nav><!-- .navbar -->
+
+      <a class="btn-book-a-table" href="#book-a-table">@LocalizationManager.GetString("BookYourCustomEvent")</a>
+      <i class="mobile-nav-toggle mobile-nav-show bi bi-list"></i>
+      <i class="mobile-nav-toggle mobile-nav-hide d-none bi bi-x"></i>
+
+    </div>
+  </header><!-- End Header -->
+
+    <main id="main" style="
+    background-image: url('@Url.Content("~/theme/ar/images/background.jpg")');
+    background-size: cover; /* Ensure the image covers the entire background */
+    background-position: center; /* Center the image */
+    background-repeat: no-repeat; /* Prevent image repetition */
+">
+
+       @RenderBody()
+  </main><!-- End #main -->
+  <!-- ======= Footer ======= -->
+  <footer id="footer" class="footer">
+    <div class="container">
+      <div class="row gy-3">
+        <div class="col-lg-3 col-md-6 d-flex">
+          <i class="bi bi-geo-alt icon"></i>
+          <div>
+                        <h4>@LocalizationManager["Address"]</h4>
+            <p>
+              A108  Street <br>
+              Amman, AM 535022 - JO<br>
+            </p>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6 footer-links d-flex">
+          <i class="bi bi-telephone icon"></i>
+          <div>
+                        <h4>@LocalizationManager["Reservations"]</h4>
+            <p>
+              <strong>Phone:</strong> +962 791131457<br>
+              <strong>Email:</strong> OctopusEvent@gmail.com<br>
+            </p>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6 footer-links d-flex">
+          <i class="bi bi-clock icon"></i>
+          <div>
+                           <h4>@LocalizationManager["OpeningHours"]</h4> 
+                        <p>
+                            <strong>Every Day: 10 AM</strong> - 12 PM
+                        </p>
+
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6 footer-links">
+                    <h4>@LocalizationManager["FollowUs"]</h4>
+          <div class="social-links d-flex">
+            <a href="#" class="twitter"><i class="bi bi-twitter"></i></a>
+            <a href="#" class="facebook"><i class="bi bi-facebook"></i></a>
+            <a href="#" class="instagram"><i class="bi bi-instagram"></i></a>
+            <a href="#" class="linkedin"><i class="bi bi-linkedin"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      <div class="copyright">
+                &copy;@LocalizationManager["Copyright"]  <strong><span> @LocalizationManager["OctopusEvent"] </span></strong>. @LocalizationManager["Reserved"]
+      </div>
+      <div class="credits">
+                @LocalizationManager["Designed"]
+      </div>
+    </div>
+
+  </footer><!-- End Footer -->
+  <!-- End Footer -->
+
+  <a href="#" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="~/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="~/assets/vendor/aos/aos.js"></script>
+  <script src="~/assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="~/assets/vendor/purecounter/purecounter_vanilla.js"></script>
+  <script src="~/assets/vendor/swiper/swiper-bundle.min.js"></script>
+  <script src="~/assets/vendor/php-email-form/validate.js"></script>
+  <!-- Template Main JS File -->
+  <script src="~/assets/js/main.js"></script>
+</body>
+</html>

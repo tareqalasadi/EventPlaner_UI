@@ -1,0 +1,1071 @@
+﻿@model List<EventPlaner_UI.Models.DirectImage>
+@using EventPlaner_UI.Helper;
+@using EventPlaner_UI.Helper.Loclizer;
+@using EventPlaner_UI.Models.Food
+@using Microsoft.AspNetCore.Mvc.Localization;
+@using Newtonsoft.Json;
+@using System.Web
+@inject IViewLocalizer LocalizationManager;
+
+@{
+    ViewData["Title"] = LocalizationManager.GetString("OctopusEvent");
+    bool isEnglish = CultureHelper.IsEnglish; // Determine language on server-side
+}
+
+<!DOCTYPE html>
+<!importanttml lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <link href="~/assets/css/main.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Amiri&family=Poppins:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+
+    <!-- Custon CSS -->
+    <link href="@Url.Content("~/Theme/" + CultureHelper.CultureName + "/css/Home.css")" rel="stylesheet" />
+
+
+</head>
+
+<style>
+    /* .modal-content {
+            padding: 20px;
+            border-radius: 10px; /* Rounded corners */
+    }
+
+    */
+    .modal-content {
+        max-height: 80vh; /* Limits modal height to 80% of the viewport height */
+        padding: 20px;
+        border-radius: 10px; /* Rounded corners */
+    }
+
+    .modal {
+        overflow: auto !important;
+    }
+
+    .modal-footer {
+        border-top: none;
+    }
+
+    #foodCartButton {
+        width: 79px;
+        height: 79px;
+        background: linear-gradient(145deg, #28a745, #32cd32);
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        box-shadow: 0px 6px 10px rgba(0, 128, 0, 0.4);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+
+        #foodCartButton .fa-shopping-cart {
+            font-size: 1.8rem;
+        }
+
+        #foodCartButton:hover {
+            transform: scale(1.1);
+            box-shadow: 0px 6px 15px rgba(50, 205, 50, 0.5);
+        }
+
+    /* Badge style for "Show Items" text */
+    .item-count-badge {
+        position: absolute;
+        top: -5px; /* Slightly above the basket icon */
+        right: 7px; /* Offset to the right of the basket */
+        font-size: 0.6rem; /* Smaller font */
+        font-weight: bold;
+        background: #ff6347;
+        color: white;
+        padding: 1px 5px; /* Reduced padding */
+        border-radius: 10px;
+        box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
+        border: 1px solid #fff; /* White border for contrast */
+        text-align: center;
+        white-space: nowrap; /* Prevents text from wrapping */
+    }
+
+
+     .upload-progress {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 10px;
+    }
+
+    .progress-bar {
+        width: 0;
+        background-color: #4caf50;
+        height: 20px;
+        text-align: center;
+        color: white;
+        margin-top: 5px;
+        border-radius: 5px;
+        transition: width 0.3s ease-in-out;
+    }
+
+    .info-icon {
+        font-size: 20px; /* Size of the icon */
+        color: #007bff; /* Blue color for the icon */
+        cursor: pointer;
+    }
+
+    #uploadDesign {
+        min-width: 120px; /* Optional: Ensures input doesn't get too small */
+    }
+
+
+
+    /* Keyframes for shake animation */
+
+
+
+
+
+</style>
+<body>
+
+    <section id="services" class="chefs section-bg">
+        <div class="container" data-aos="fade-up">
+            <div class="sections-header" style="margin-top:88px">
+                <p><span>@LocalizationManager.GetString("Requsttype")</span></p>
+            </div>
+            <div class="form-group d-flex align-items-center">
+                <i class="fas fa-search search-icon"></i>
+                <select class="form-control custom-select" id="typeService" name="TypeService" placeholder="Filter by Service Type">
+                    <option value="" disabled selected hidden>@LocalizationManager["Filter"]</option>
+
+                    @foreach (var serviceType in Model.Select(x => x.TypeService).Distinct())
+                    {
+                        <option value="@serviceType">@serviceType</option>
+                    }
+                </select>
+                <button id="clearButton" type="button" class="btn btn-clear clear-btn">@LocalizationManager.GetString("Clear")</button>
+            </div>
+            <div class="form-group d-flex align-items-center">
+                <!-- Info Icon -->
+                <i class="fas fa-info-circle search-icon" title="@LocalizationManager.GetString("UploadDesignInstruction")"></i>
+
+                <!-- File Input -->
+                <input type="file"
+                       id="uploadDesign"
+                       class="form-control ms-2"
+                       multiple
+                       onchange="handleFileUpload(event)"
+                       style="width: 30%;">
+
+                <div id="phoneModal" class="modal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">@LocalizationManager["SubmitButtonText"]</h5>
+                                <button type="button" class="btn-close but_Direction" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <br />
+                                <input type="text" id="phoneNumberFile" class="form-control" placeholder='@Html.Raw(LocalizationManager.GetString("EnterYourPhoneNumber"))'>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-primary" onclick="submitPhone()">@LocalizationManager["SubmitButtonText"]</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@LocalizationManager["Cancel"]</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="uploadProgressContainer" class="mt-2"></div>
+
+            <div class="row gy-4 position-relative">
+                <div class="navigation-icons">
+                    <i class="fas fa-chevron-left text-primary" id="prev-icon"></i>
+                    <i class="fas fa-chevron-right text-primary" id="next-icon"></i>
+                </div>
+                <div class="row gy-4" id="card-container">
+                    <!-- Cards will be inserted here by JavaScript -->
+                </div>
+            </div>
+        </div>
+      <div id="cartButtonDiv" style="display: none; text-align: center; margin-top: 20px; justify-content: center;">
+            <button id="foodCartButton" type="button" onclick="ViewCart()">
+                <i class="fa fa-shopping-cart"></i>
+                <span class="item-count-badge">@LocalizationManager["showItem"] </span> 
+            </button>
+        </div>
+          <br /> <br />
+        <div class="d-flex align-items-center mt-3">
+
+            <!-- File Input -->
+          
+        </div>
+
+</section>
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="detailsModal" style="max-height: 80%; overflow-y: auto;" tabindex="-1" role="dialog" aria-labelledby="detailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content" style="width:130%">
+                <form id="requestForm">
+
+                   <input type="hidden" id="ServiceId" name="ServiceId" value=@Model.FirstOrDefault().ServiceId />
+                    
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="serviceName"></h5>
+                        <button type="button" class="close" id="closeModal">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                             <input type="hidden" id="Item_Id" name="Item_Id" />
+                    <input type="hidden" id="Cart_Items" name="Cart_Items"/>
+                    <input type="hidden" id="All_items" name="All_items"/>
+                            @if (Model.FirstOrDefault().ServiceId != 10)
+                            {
+                                  <div style="text-align: @(isEnglish ? "left" : "right");">
+                                <label for="count" class="required">@LocalizationManager["Count"]</label>
+                                </div>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <button type="button" class="btn btn-outline-secondary" id="decrementCount" style="color: #729e92;">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                    </div>
+                                    <input type="text" class="form-control" id="count" name="Count" value="1" readonly>
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-outline-secondary" id="incrementCount" style="color: #729e92;">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="form-group">
+                                                              <div style="text-align: @(isEnglish ? "left" : "right");">
+
+                            <label for="customerName" class="required">@LocalizationManager["YourNameLabel"]</label>
+                            </div>
+                            <input type="text" class="form-control" id="customerName" name="CustomerName" placeholder="Enter your name">
+                        </div>
+                        <div class="form-group">
+                            <div style="text-align: @(isEnglish ? "left" : "right");">
+                            <label for="phoneNumber" class="required" style="display: block; min-width: 150px;">@LocalizationManager["PhoneNumberLabel"]</label>
+                            </div>
+                <input type="text" class="form-control" id="phoneNumber" name="PhoneNumber" style="display: block; width: 100%;" onchange="MobileError()" placeholder="@LocalizationManager["PhoneNumberPlaceholder"]" inputmode="numeric" pattern="[0-9]*">
+                            <div style="text-align: @(isEnglish ? "left" : "right");">
+                    <span id="phoneNumbererror" class="error-message" style="color: red;"></span>
+                </div>
+                        </div>
+
+
+
+
+                        
+                        <div class="form-group">
+                                                              <div style="text-align: @(isEnglish ? "left" : "right");">
+
+                            <label for="cityId" class="required">@LocalizationManager["CityLabel"]</label>
+                            </div>
+                            <select class="form-control" id="cityId" name="CityId">
+                                <option value="" disabled selected>@LocalizationManager["SelectCityPlaceholder"]</option>
+                                <option value="1">Amman</option>
+                                <option value="2">Irbid</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                                                              <div style="text-align: @(isEnglish ? "left" : "right");">
+
+                            <label for="startDate" class="required">@LocalizationManager["RequestDateLabel"]</label>
+                            </div>
+                            <input type="text" class="form-control" id="startDate" name="StartDate" placeholder="@LocalizationManager["RequestDateLabel"]">
+                        </div>
+                        <div class="form-group">
+                                                              <div style="text-align: @(isEnglish ? "left" : "right");">
+
+                            <label for="note">@LocalizationManager["Note"]</label>
+                            </div>
+                            <textarea class="form-control" id="note" name="Note" placeholder="@LocalizationManager["Note"]"></textarea>
+                        </div>
+                        <input type="hidden" id="serviceNameInput" name="ServiceName">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="closeModalBtn">@LocalizationManager.GetString("Close")</button>
+                        <button type="submit" class="btn btn-primary" style="background-color:#729e92;width: auto;">@LocalizationManager["SubmitButtonText"]</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+    <!-- Food Modal  (Add To Cart)-->
+    <div class="modal fade" id="AddToCartdetailsModal" tabindex="-1" role="dialog" aria-labelledby="detailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form id="AddToCartrequestForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="AddToCartserviceName"></h5>
+                        <button type="button" class="close" id="AddToCartCloseModal">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <input type="hidden" id="ItemId" />
+                    <input type="hidden" id="ItemPrice" />
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <div class="col-lg-12 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="100">
+                                <div class="chef-member">
+                                    <div class="member-img">
+                                        <img id="FoodImage" class="img-fluid" alt="Food Image">
+                                    </div>
+                                </div>
+                            </div>
+                            <label for="count" class="required">@LocalizationManager["Count"]</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <button type="button" class="btn btn-outline-secondary" id="AddToCartdecrementCount" style="color: #729e92;">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                </div>
+                                <input type="text" class="form-control" id="AddToCartcount" name="AddToCartCount" value="0" readonly>
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-secondary" id="AddToCartincrementCount" style="color: #729e92;">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <span id="ItemCountValidation" class="text-danger"></span>
+
+
+                        </div>
+                        <div class="form-group">
+                            <label for="note">@LocalizationManager["NoteLabel"]</label>
+                            <textarea class="form-control" id="AddToCartnote" name="AddToCartNote" placeholder=@LocalizationManager["WriteNotePlaceholder"]></textarea>
+                        </div>
+                        <input type="hidden" id="serviceNameInput" name="ServiceName">
+                    </div>
+                    <div class="modal-footer">
+
+
+                        <button type="button" class="btn btn-outline-secondary" id="AddToCartbtn" onclick="AddToCart()" style="color: #729e92;">
+                            <i class="fa fa-cart-plus"></i>@LocalizationManager.GetString("AddToCart") 
+                        </button>
+
+                        <button type="button" class="btn btn-secondary" id="AddToCartCloseModalBtn">@LocalizationManager.GetString("Close")</button>
+
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- View Cart Modal  (View Cart)-->
+    <div class="modal fade" id="ViewCartdetailsModal" tabindex="-1" role="dialog" aria-labelledby="detailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form id="ViewCartrequestForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="ViewCartserviceName"></h5>
+                        <button type="button" class="close" id="ViewCartCloseModal">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <div class="col-lg-12 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="100">
+                                <div class="table-responsive">
+                                    <table id="servicesTable" class="table table-striped table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>@LocalizationManager.GetString("Image")</th>
+                                                <th>@LocalizationManager.GetString("Item")</th>
+                                                <th>@LocalizationManager.GetString("Note")</th>
+                                                <th>@LocalizationManager.GetString("Count")</th>
+                                                <th>@LocalizationManager.GetString("Price")</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="ViewCartBody">
+                                            <!-- Table data -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                         <div class="row">
+                            <span id="totalPriceDisplay" style="margin-right: 253px; font-weight: bold;">Total Price: 0 JD</span>
+
+                        </div>
+                        <button type="button" class="btn btn-outline-secondary" onclick="EmptyCart()">
+                            <i class="fa fa-shopping-cart"></i> @LocalizationManager.GetString("EmptyCart")
+                        </button>
+                        <button id="CompleteBTN" type="button" class="btn btn-outline-secondary">
+                            <i class="fa fa-credit-card"></i> @LocalizationManager.GetString("Complete")
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="ViewCloseModalBtn">@LocalizationManager.GetString("Close")</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+
+
+          document.addEventListener("DOMContentLoaded", function () {
+            var input = document.querySelector("#phoneNumber");
+
+            var iti = window.intlTelInput(input, {
+                preferredCountries: ["jo"], 
+                separateDialCode: true, 
+                initialCountry: "jo", 
+                geoIpLookup: function (callback) {
+                    callback("jo"); 
+                },
+            });
+
+            function toggleDirection() {
+              
+                    document.body.classList.add("rtl");
+             
+            }
+
+            
+        });
+          document.addEventListener("DOMContentLoaded", function () {
+            var input = document.querySelector("#phoneNumberFile");
+
+            var iti = window.intlTelInput(input, {
+                preferredCountries: ["jo"], 
+                separateDialCode: true, 
+                initialCountry: "jo", 
+                geoIpLookup: function (callback) {
+                    callback("jo"); 
+                },
+            });
+
+            function toggleDirection() {
+              
+                    document.body.classList.add("rtl");
+             
+            }
+
+            
+        });
+
+
+         function MobileError() {
+    debugger;
+    const phoneNumber = document.getElementById('phoneNumber');
+    const errorSpan = document.getElementById('phoneNumbererror'); // Use getElementById
+
+    const phonePattern = /^(07\d{8}|7\d{8})$/; // Matches 07XXXXXXXX (10 digits) or 7XXXXXXXX (9 digits)
+    if (phoneNumber.value == '' || phoneNumber.value == undefined) 
+    {
+         phoneNumber.style.borderColor = "";
+        errorSpan.innerText = ""; 
+        return
+    }
+    if (!phonePattern.test(phoneNumber.value)) {
+        phoneNumber.style.borderColor = "red";
+        errorSpan.innerText = "@Html.Raw(HttpUtility.JavaScriptStringEncode(LocalizationManager.GetString("PhoneNumberValidationMessage")))"; // Use innerText
+    } else {
+        phoneNumber.style.borderColor = "";
+        errorSpan.innerText = ""; 
+    }
+}
+
+        $(document).ready(function() {
+    $('#phoneNumber').on('keydown', function(event) {
+        if (!((event.key >= '0' && event.key <= '9') || event.key === 'Backspace' || event.key === 'Delete' || event.key === 'ArrowLeft' || event.key === 'ArrowRight' || event.key === 'Tab')) {
+            event.preventDefault(); 
+        }
+    });
+});
+        let cartItems = [];
+        let cartId=1;
+        
+        function AddToCart(){
+            debugger
+            if($('#AddToCartcount').val()!=0 && $('#AddToCartcount').val()!=''){
+                
+                let itemId = document.getElementById('ItemId').value.trim();
+                let itemPrice = document.getElementById('ItemPrice').value.trim();
+                let itemCount = document.getElementById('AddToCartcount').value;
+                let itemNote = document.getElementById('AddToCartnote').value;
+                let Name = $('#AddToCartserviceName').text().trim();
+                let foodImage = document.getElementById('FoodImage').src;
+
+                let cartItem = {
+                    id:cartId,
+                    itemId: itemId,
+                    price: itemPrice,
+                    count: itemCount,
+                    image: foodImage,
+                    name:Name,
+                    note:itemNote
+                };
+                
+                cartItems.push(cartItem);
+                cartId=cartId+1;
+                $('#AddToCartnote').val('');
+                $('#AddToCartcount').val(0);
+                $('#AddToCartdetailsModal').modal('hide');
+                DisplayCountOfItemInCart();
+
+                    var cartDiv = document.getElementById("cartButtonDiv");
+              cartDiv.style.display = "grid"; 
+            }
+            else{
+                $("#ItemCountValidation").text('@Html.Raw(LocalizationManager.GetString("ItemCountValidation"))');
+                return;
+            }
+          }
+          
+          function DisplayCountOfItemInCart () {
+              debugger
+              const items = @Html.Raw(JsonConvert.SerializeObject(Model));
+              items.forEach(item => {
+                  debugger
+                  let  Count=cartItems.filter(x => x.itemId == item.ID).length;
+                  if(Count >0)
+                  {
+                      debugger
+                      $('#CountInCart_'+item.ID).text('X'+Count);
+                  }
+                  else{
+                       $('#CountInCart_'+item.ID).text('');
+                  }
+              });
+          }
+          
+          function ViewCart () {
+              $('#ViewCartBody').empty();
+
+
+              let totalPrice = 0;
+                    $('#ViewCartdetailsModal').modal('show');
+                    cartItems.forEach(item => {
+                        const itemPrice = parseInt(item.price, 10);
+                        totalPrice += itemPrice * item.count
+
+
+
+
+
+
+              
+                  $('#ViewCartBody').append(`
+                  <tr>
+                    <td hidden>${item.id}</td>
+                    <td>
+                        <img src=${item.image} alt="Service Image" style="width:50px;height:50px;" />
+                    </td>
+                    <td>${item.name}</td>
+                    <td>${item.note}</td>
+                    <td>${item.count}</td>
+                    <td>${item.price}</td>
+                    <td>
+                        <button type="button" class="btn btn-outline-secondary" onclick="RemoveFromCart(${item.id})" style="color:Green;">
+                            <i class="fa fa-shopping-cart"></i> @Html.Raw(LocalizationManager.GetString("RemoveFromCart"))
+                        </button>
+                    </td>
+                  </tr>
+                  `);
+                });
+                  $('#totalPriceDisplay').text(`Total Price: ${totalPrice} JD`);
+                       $("#CompleteBTN").show();
+          }
+          
+          function RemoveFromCart(Id){
+              debugger
+              cartItems= cartItems.filter(x => x.id !== Id);
+              ViewCart ();
+              DisplayCountOfItemInCart();
+              if(cartItems.length==0){
+                  var cartDiv = document.getElementById("cartButtonDiv");
+              cartDiv.style.display = "none"; 
+               $("#CompleteBTN").hide();
+          }
+          }
+          function EmptyCart(){
+              cartItems=[];
+              ViewCart ();
+              DisplayCountOfItemInCart();
+              var cartDiv = document.getElementById("cartButtonDiv");
+              cartDiv.style.display = "none"; 
+               $("#CompleteBTN").hide();
+          }
+          
+          $(document).ready(function () {
+              var cartDiv = document.getElementById("cartButtonDiv");
+              cartDiv.style.display = "none"; 
+
+              $('html, body').scrollTop(0);
+              $("#clearButton").hide();
+              $("#CompleteBTN").hide();
+              const items = @Html.Raw(JsonConvert.SerializeObject(Model));
+              const isEnglish = @isEnglish.ToString().ToLower();
+              const itemsPerPage = 3;
+              let currentPage = 0;
+              displayItems(currentPage, $('#typeService').val()
+          );
+          
+          function displayItems(page, filterTypeService = "") {
+              debugger
+              $('#card-container').empty();
+              const filteredItems = filterTypeService ? items.filter(item => item.TypeService === filterTypeService) : items;
+              
+              const start = page * itemsPerPage;
+              const end = start + itemsPerPage;
+              const pageItems = filteredItems.slice(start, end);
+
+              pageItems.forEach(item => {
+                  $('#card-container').append(`
+                      <div class="col-lg-4 col-md-6 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="100">
+                          <div class="chef-member">
+                              <div class="member-img">
+                                  <img src="data:image/png;base64,${item.ImageBase64}" class="img-fluid" alt="Service Image">
+                              </div>
+                              <div class="member-info">
+                                  <div class="h10 ${isEnglish ? '' : 'arabic'}">
+                                      ${isEnglish ? item.DescriptionEn : item.DescriptionAr}
+                                  </div>
+                                   <div ${isEnglish ? '' : 'arabic'}">
+                                  <p>${isEnglish ? 'Price:' : 'السعر:'} ${item.Price}</p>
+                              </div>
+                              </div>
+                               <div class="Item_Id" hidden>
+                               <p>${item.ID}</p>
+                              </div>
+
+                               <div class="Item_Price" hidden>
+                               <p>${item.Price}</p>
+                              </div>
+
+                               <div>
+                               <p style="color:red" id="CountInCart_${item.ID}"></p>
+                              </div>
+                              </div>
+                              </div>
+                      </div>
+                  `);
+              });
+              
+              const totalItems = filteredItems.length;
+              if (pageItems.length < 3) {
+                  $('#next-icon').hide();
+              }
+              else {
+                  $('#prev-icon').show();
+                  
+                  const nextPageStart = (page + 1) * itemsPerPage;
+                  const nextPageItems = filteredItems.slice(nextPageStart, nextPageStart + itemsPerPage);
+                  if (nextPageItems.length == 0) {
+                      $('#next-icon').hide();
+                  } else {
+                      $('#next-icon').show();
+                  }
+              }
+              }
+              
+              $('#clearButton').click(function () {
+                  $('#typeService').val('');
+                  currentPage = 0;
+                  displayItems(currentPage);
+                  $("#clearButton").hide();
+              });
+              
+              $('#next-icon').click(function () {
+                  if ((currentPage + 1) * itemsPerPage < items.length) {
+                      currentPage++;
+                      displayItems(currentPage, $('#typeService').val());
+                  }
+                  if(@Model.FirstOrDefault().ServiceId==10)
+                  {
+                      DisplayCountOfItemInCart();
+                  }
+              });
+
+              $('#prev-icon').click(function () {
+                  if (currentPage > 0) {
+                      currentPage--;
+                      displayItems(currentPage, $('#typeService').val());
+                  }
+                   if(@Model.FirstOrDefault().ServiceId==10)
+                  {
+                       DisplayCountOfItemInCart();
+                  }
+              });
+
+              $('#typeService').change(function () {
+                  currentPage = 0;
+                  displayItems(currentPage, $(this).val());
+                  $("#clearButton").show();
+                  
+              });
+
+                    $('#card-container').on('click', '.chef-member', function () {
+                        debugger
+                        const serviceName = $(this).find('.h10').text(); 
+                        const _ItemId = $(this).find('.Item_Id').text(); 
+                        const _ItemPrice = $(this).find('.Item_Price').text(); 
+
+
+
+                    const imgElement = $(this).find('img'); 
+                    const imageUrl = imgElement.attr('src'); 
+                    const DialogImage = document.getElementById('FoodImage');
+
+                    DialogImage.src = imageUrl;
+
+                         $('#ItemId').text(_ItemId);
+                        $('#ItemId').val(_ItemId);
+                        $('#Item_Id').val(_ItemId.trim());
+                        $('#All_items').val(JSON.stringify(items));
+
+                             $('#ItemPrice').text(_ItemPrice);
+                        $('#ItemPrice').val(_ItemPrice);
+                         if(@Model.FirstOrDefault().ServiceId!=10)
+                        {                   
+                            
+                             $('#serviceName').text(serviceName);
+                        $('#serviceNameInput').val(serviceName);
+                        $('#detailsModal').modal('show');
+                        }
+                       else{
+
+
+
+                        $('#AddToCartserviceName').text(serviceName);
+                        $('#AddToCartserviceNameInput').val(serviceName);
+                                $("#ItemCountValidation").text('');
+
+                        $('#AddToCartdetailsModal').modal('show');
+                       }
+                       });
+
+                    
+                    // Initialize flatpickr
+                    flatpickr("#startDate", {
+                        dateFormat: "d/m/Y h:i K", // Date and time format with 12-hour clock and AM/PM
+                        minDate: new Date().fp_incr(1), // Minimum date is tomorrow
+                        enableTime: true, // Enable time selection
+                        time_24hr: false, // Use 12-hour format with AM/PM
+                    });
+
+                    // Increment and Decrement Count
+                    $('#incrementCount').click(function () {
+                        let count = parseInt($('#count').val());
+                        $('#count').val(count + 1);
+                    });
+
+                    $('#AddToCartincrementCount').click(function () {
+                        let count = parseInt($('#AddToCartcount').val());
+                        $('#AddToCartcount').val(count + 1);
+                    });
+
+                    $('#decrementCount').click(function () {
+                        let count = parseInt($('#count').val());
+                        if (count > 1) {
+                            $('#count').val(count - 1);
+                        }
+                    });
+
+                    $('#AddToCartdecrementCount').click(function () {
+                        let count = parseInt($('#AddToCartcount').val());
+                        if (count > 1) {
+                            $('#AddToCartcount').val(count - 1);
+                        }
+                    });
+
+                    // Form submission with validation
+                    $('#requestForm').submit(function (e) {
+                        debugger
+                        e.preventDefault();
+                        debugger
+
+                        // Custom validation
+                        if (!validateForm()) {
+                            return;
+                        }
+
+                     const formData = $(this).serializeArray(); // Serializes form data into an array
+let dataToSend = {}; 
+
+$.each(formData, function (i, field) {
+    dataToSend[field.name] = field.value;  // Converts array into an object
+});
+
+$.ajax({
+    url: '@Url.Action("SubmitRequest", "Home")',
+    type: 'POST',
+    contentType: 'application/json',  // Sending as JSON
+    data: JSON.stringify(dataToSend),
+                            success: function (response) {
+                                $('#detailsModal').modal('hide');
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Request Submitted',
+                                    text: 'Your request has been sent successfully. We will contact you within a few moments.',
+                                    confirmButtonText: 'OK'
+                                });
+                                $('#requestForm')[0].reset();
+                            },
+                            error: function (error) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Submission Failed',
+                                    text: 'There was an error submitting your request. Please try again.',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                        });
+                    });
+
+  function validateForm() {
+      
+   let isValid = true;
+   const customerName = document.getElementById('customerName');
+            if (!customerName.value.trim()) {
+                isValid = false;
+                customerName.style.borderColor = 'red';
+            } else {
+                customerName.style.borderColor = '';
+            }
+            debugger;
+            const phoneNumber = document.getElementById('phoneNumber');
+            if (!phoneNumber.value.trim() || !/^\d+$/.test(phoneNumber.value.trim())) {
+                isValid = false;
+                phoneNumber.style.borderColor = 'red';
+            } else {
+
+
+                var phonePattern = /^(07\d{8}|7\d{8})$/; 
+
+                  const errorSpan = document.getElementById('phoneNumbererror'); 
+               
+                errorSpan.innerText ='';
+
+
+                if (!phonePattern.test(phoneNumber.value)) {
+                errorSpan.innerText = "@Html.Raw(HttpUtility.JavaScriptStringEncode(LocalizationManager.GetString("PhoneNumberValidationMessage")))"; // Use innerText
+                        }
+                else{
+                            phoneNumber.style.borderColor = '';
+
+                }
+            }
+            const startDate = document.getElementById('startDate');
+            if (!startDate.value.trim()) {
+                isValid = false;
+                startDate.style.borderColor = 'red';
+            } else {
+                startDate.style.borderColor = '';
+            }
+
+            const cityId = document.getElementById('cityId');
+            if (!cityId.value) {
+                isValid = false;
+                cityId.style.borderColor = 'red';
+            } else {
+                cityId.style.borderColor = '';
+            }
+             if (!isValid) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: '@Html.Raw((LocalizationManager.GetString("ValidationErrorTitle")))',
+                    text: '@Html.Raw((LocalizationManager.GetString("fieldsRequired")))',
+                    confirmButtonText: 'OK',
+                });
+                return isValid;
+                       
+       }
+              return isValid;
+  }
+
+                    // Function to reset the form and remove error messages
+                    function resetForm() {
+                        $('.error-message').remove();
+                        $('#requestForm')[0].reset();
+                    }
+
+
+                    function AddToCartResetForm() {
+                        $('.error-message').remove();
+                        $('#AddToCartrequestForm')[0].reset();
+                    }
+
+                    // Custom modal close functionality
+                    $('#closeModal, #closeModalBtn').click(function () {
+                        $('#detailsModal').modal('hide');
+                        resetForm();
+                    });
+
+                    $('#AddToCartCloseModal, #AddToCartCloseModalBtn').click(function () {
+                        $('#AddToCartdetailsModal').modal('hide');
+                        AddToCartResetForm();
+                    });
+
+                    $('#ViewCartCloseModal, #ViewCloseModalBtn').click(function () {
+                        $('#ViewCartdetailsModal').modal('hide');
+                         DisplayCountOfItemInCart();
+                    });
+                });
+
+
+                  $('#CompleteBTN').click(function () {
+$('#Cart_Items').val(JSON.stringify(cartItems));
+                      
+                      $('#ViewCartdetailsModal').modal('hide');
+                      $('#serviceName').text('@Html.Raw(LocalizationManager.GetString("Complete"))');
+                      $('#serviceNameInput').val('@Html.Raw(LocalizationManager.GetString("Complete"))');
+                      $('#detailsModal').modal('show');
+                  });
+
+                          //// Upload image
+                //// Upload image
+        let pendingFiles = [];
+        let currentFileIndex = 0;
+
+        function handleFileUpload(event) {
+            const files = event.target.files;
+            pendingFiles = Array.from(files);
+            currentFileIndex = 0;
+
+            if (pendingFiles.length > 0) {
+                showPhoneModal();
+            }
+        }
+
+        function showPhoneModal() {
+            const modal = new bootstrap.Modal(document.getElementById('phoneModal'));
+            modal.show();
+        }
+
+        function submitPhone() {
+            const phoneNumber = document.getElementById('phoneNumberFile').value;
+
+            const validationMessage = "@Html.Raw(HttpUtility.JavaScriptStringEncode(LocalizationManager.GetString("PhoneNumberValidationMessage")))";
+
+            const phoneNumberRegex = /^(07\d{8}|7\d{8})$/; // Starts with "07" (10 digits) or "7" (9 digits)
+
+            if (!phoneNumber) {
+                Swal.fire({
+                    icon: 'error',
+                    title: '@LocalizationManager.GetString("InvalidPhone")',
+                    text: validationMessage,
+                });
+                return;
+            }
+
+            if (!phoneNumberRegex.test(phoneNumber)) {
+                Swal.fire({
+                    icon: 'error',
+                    title:  '@LocalizationManager.GetString("InvalidPhone")',
+                    text: validationMessage, 
+                });
+                return;
+            }
+
+            const uploadContainer = document.getElementById('uploadProgressContainer');
+            uploadContainer.innerHTML = '';
+
+            pendingFiles.forEach((file, index) => {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('phoneNumber', phoneNumber);
+
+                const progressDiv = document.createElement('div');
+                progressDiv.classList.add('upload-progress', 'mb-2');
+
+                const progressBar = document.createElement('div');
+                progressBar.classList.add('progress-bar');
+                progressBar.style.width = '34%';
+                progressBar.style.height = '20px';
+                progressBar.style.backgroundColor = '#4caf50';
+
+                const progressText = document.createElement('span');
+
+                progressDiv.appendChild(progressText);
+                progressDiv.appendChild(progressBar);
+                uploadContainer.appendChild(progressDiv);
+
+                uploadFile(formData, progressBar, file.name);
+            });
+
+            const modal = bootstrap.Modal.getInstance(document.getElementById('phoneModal'));
+            modal.hide();
+            $("#phoneNumberFile").val("");
+
+        }
+
+        function uploadFile(formData, progressBar, fileName) {
+            const xhr = new XMLHttpRequest();
+                    xhr.open('POST', '@Url.Action("UploadDesign", "Home")');
+
+            xhr.upload.onprogress = function (event) {
+                if (event.lengthComputable) {
+                    const percentComplete = (event.loaded / event.total) * 100;
+                    progressBar.style.width = `${percentComplete}%`;
+                    progressBar.innerText = `${Math.round(percentComplete)}%`;
+                }
+            };
+
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.success) {
+                        progressBar.style.width = '34%';
+                        progressBar.style.backgroundColor = '#28a745';
+                        progressBar.innerText = 'Complete 100%';
+                        Swal.fire({
+                            icon: 'success',
+                            title: '@LocalizationManager.GetString("UploadSuccessTitle")',
+                            text: '@LocalizationManager.GetString("UploadSuccessMessage")',
+                            confirmButtonText: '@LocalizationManager.GetString("OkButton")'
+                        });
+                    } else {
+                        progressBar.style.backgroundColor = '#dc3545';
+                        progressBar.innerText = `Failed: ${fileName}`;
+                    }
+                } else {
+                    progressBar.style.backgroundColor = '#dc3545';
+                    progressBar.innerText = `Failed: ${fileName}`;
+                }
+            };
+
+            xhr.onerror = function () {
+                progressBar.style.backgroundColor = '#dc3545';
+                progressBar.innerText = `Error: ${fileName}`;
+            };
+
+            xhr.send(formData);
+        }
+
+    </script>
+</body>
+</html>

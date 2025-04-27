@@ -1,0 +1,28 @@
+﻿# Ignore build and binary folders
+bin/
+obj/
+publish/
+
+# Ignore Visual Studio temporary files
+*.user
+*.suo
+.vscode/
+.vs/
+
+# Ignore logs
+*.log
+logs/
+
+# Ignore compiled files
+*.dll
+*.exe
+*.pdb
+
+# Ignore dependency folders
+node_modules/
+packages/
+
+# Ignore environment and config files
+*.env
+secrets.json
+appsettings.*.json

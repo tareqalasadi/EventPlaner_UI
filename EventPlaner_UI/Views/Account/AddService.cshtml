@@ -1,0 +1,63 @@
+﻿@model Service
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get in Touch</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link href="~/theme/ar/css/home.css" rel="stylesheet" />
+</head>
+<body>
+    <section class="get-in-touch">
+        <h1 class="title">Add New Service</h1>
+        <form asp-action="AddService" method="post" enctype="multipart/form-data" class="contact-form row">
+            <div class="form-field col-lg-6">
+                <label for="ServiceNameEn">Service Name (English)</label>
+                <input asp-for="ServiceNameEn" id="ServiceNameEn" class="input-text js-input" type="text" required>
+                <span asp-validation-for="ServiceNameEn" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-6">
+                <label for="ServiceNameAr">Service Name (Arabic)</label>
+                <input asp-for="ServiceNameAr" id="ServiceNameAr" class="input-text js-input" type="text" required>
+                <span asp-validation-for="ServiceNameAr" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-6">
+                <label for="DescriptionEn">Description (English)</label>
+                <input asp-for="DescriptionEn" id="DescriptionEn" class="input-text js-input" type="text" required>
+                <span asp-validation-for="DescriptionEn" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-6">
+                <label for="DescriptionAr">Description (Arabic)</label>
+                <input asp-for="DescriptionAr" id="DescriptionAr" class="input-text js-input" type="text" required>
+                <span asp-validation-for="DescriptionAr" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-12">
+                <label for="ImageFile">Image File</label>
+                <input asp-for="Images" class="input-file js-input" type="file" required>
+                <span asp-validation-for="Image" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-12">
+                <label for="Direct">Direct</label>
+                <div>
+                    <input asp-for="Direct" id="DirectYes" type="radio" value="1" required>
+                    <label for="DirectYes">Yes</label>
+                </div>
+                <div>
+                    <input asp-for="Direct" id="DirectNo" type="radio" value="0" required>
+                    <label for="DirectNo">No</label>
+                </div>
+                <span asp-validation-for="Direct" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-12">
+                <input class="submit-btn" type="submit" value="Submit">
+            </div>
+        </form>
+    </section>
+</body>
+</html>

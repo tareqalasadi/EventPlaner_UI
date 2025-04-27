@@ -1,0 +1,111 @@
+﻿@model List<Service>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service List</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11">
+</head>
+<body>
+    <div class="container mt-5" style="padding-top:100px">
+        <h1 class="title">Service List</h1>
+        <a href="@Url.Action("AddService")" class="btn btn-primary mb-3">Add New Service</a>
+        <a href="@Url.Action("AddCategoryOfService")" class="btn btn-primary mb-3">Add New Category</a>
+        <a href="@Url.Action("AddDirectImage")" class="btn btn-primary mb-3">Add Direct Image</a>
+        <a href="@Url.Action("AddPartyServices")" class="btn btn-primary mb-3">Add Party Service</a>
+        <table id="servicesTable" class="display">
+            <thead>
+                <tr>
+                    
+                    <th>Service Name (English)</th>
+                    <th>Service Name (Arabic)</th>
+                    <th>Description (English)</th>
+                    <th>Description (Arabic)</th>
+                    <th>Image</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody> 
+                @if (Model != null && Model.Count >0)
+                {
+                    @foreach (var service in Model)
+                    {
+                        <tr>
+                            <td hidden>@service.ID</td>
+                            <td>@service.ServiceNameEn</td>
+                            <td>@service.ServiceNameAr</td>
+                            <td>@service.DescriptionEn</td>
+                            <td>@service.DescriptionAr</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(service.ImageBase64))
+                                {
+                                    <img src="data:image/png;base64,@service.ImageBase64" alt="Service Image" style="width:50px;height:50px;" />
+                                }
+                                else
+                                {
+                                    <span>No Image</span>
+                                }
+                            </td>
+                            <td style="    width: 170px;">
+                                <a href="@Url.Action("UpdateService", new { id = service.ID })" class="btn btn-warning">Edit</a>
+                                <button class="btn btn-danger" onclick="deleteService('@service.ID')">Delete</button>
+                            </td>
+                        </tr>
+                    }
+
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <!-- Bootstrap JS (optional for styling) -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#servicesTable').DataTable();
+        });
+
+        function deleteService(id) {
+            // Use SweetAlert2 for confirmation dialog
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'You will not be able to recover this service!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // User confirmed deletion, proceed with AJAX request
+                    $.ajax({
+                        url: '@Url.Action("DeleteService", "Account")' + '/' + id,
+                        type: 'POST',
+                        success: function (result) {
+                            location.reload(); // Refresh the page after deletion
+                        },
+                        error: function (xhr, status, error) {
+                            console.error(xhr.responseText);
+                            alert("Error deleting service.");
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+﻿@model PartyServicesViewModel
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Party Service</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link href="~/theme/ar/css/home.css" rel="stylesheet" />
+    <style>
+        .form-field {
+            margin-bottom: 15px;
+        }
+
+            .form-field label {
+                font-weight: bold;
+            }
+
+        .custom-file-input {
+            cursor: pointer;
+        }
+
+        .custom-file-label::after {
+            content: "Browse";
+        }
+
+        .custom-file-label::before {
+            content: "Choose file";
+        }
+
+        .image-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+            .image-preview img {
+                max-width: 150px;
+                max-height: 150px;
+                object-fit: cover;
+                border: 1px solid #ddd;
+                padding: 5px;
+            }
+
+        .checkbox-label {
+            font-weight: normal;
+            display: inline-block;
+            margin-right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <section class="get-in-touch">
+        <h1 class="title">Add Party Service</h1>
+        <form id="partyServicesForm" enctype="multipart/form-data">
+            <div class="form-field col-lg-6">
+                <label for="ServiceNameAr">Service Name (Arabic)</label>
+                <input asp-for="ServiceNameAr" id="ServiceNameAr" class="input-text js-input form-control" required>
+                <span asp-validation-for="ServiceNameAr" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-6">
+                <label for="ServiceNameEn">Service Name (English)</label>
+                <input asp-for="ServiceNameEn" id="ServiceNameEn" class="input-text js-input form-control" required>
+                <span asp-validation-for="ServiceNameEn" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-6">
+                <label for="DescriptionAr">Description (Arabic)</label>
+                <input asp-for="DescriptionAr" id="DescriptionAr" class="input-text js-input form-control" required>
+                <span asp-validation-for="DescriptionAr" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-6">
+                <label for="DescriptionEn">Description (English)</label>
+                <input asp-for="DescriptionEn" id="DescriptionEn" class="input-text js-input form-control" required>
+                <span asp-validation-for="DescriptionEn" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-6">
+                <label for="MainImage">Main Image</label>
+                <div class="custom-file">
+                    <input asp-for="MainImage" id="MainImage" class="custom-file-input" type="file" required>
+                    <label class="custom-file-label" for="MainImage">Choose file</label>
+                </div>
+                <span asp-validation-for="MainImage" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-6">
+                <label for="ImageList">Additional Images</label>
+                <div class="custom-file">
+                    <input asp-for="ImageList" id="ImageList" class="custom-file-input" type="file" multiple>
+                    <label class="custom-file-label" for="ImageList">Choose files</label>
+                </div>
+                <span asp-validation-for="ImageList" class="text-danger"></span>
+                <div id="imagePreviewContainer" class="image-preview mt-3"></div>
+            </div>
+            <div class="form-field col-lg-6">
+                <label for="TypeService">Type of Service</label>
+                <input asp-for="TypeService" id="TypeService" class="input-text js-input form-control" required>
+                <span asp-validation-for="TypeService" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-12">
+                <label for="ServiceId">Select Service</label>
+                <select asp-for="ServiceId" id="ServiceId" class="form-control">
+                    <option value="">-- Select Service --</option>
+                    @foreach (var service in Model.Services)
+                    {
+                        <option value="@service.Value">@service.Text</option>
+                    }
+                </select>
+                <span asp-validation-for="ServiceId" class="text-danger"></span>
+            </div>
+            <!-- Checkbox section -->
+            <div class="form-field col-lg-12">
+                <label class="checkbox-label"><input asp-for="IsPhotographerIncluded" type="checkbox"> Photographer Included</label>
+                <label class="checkbox-label"><input asp-for="IsZafaIncluded" type="checkbox"> Zafa Included</label>
+                <label class="checkbox-label"><input asp-for="IsSweetCollectionIncluded" type="checkbox"> Sweet Collection Included</label>
+                <label class="checkbox-label"><input asp-for="IsFriendAssistanceNeeded" type="checkbox"> Friend Assistance Needed</label>
+                <label class="checkbox-label"><input asp-for="IsCakeIncluded" type="checkbox"> Cake Included</label>
+                <label class="checkbox-label"><input asp-for="IsFoodIncluded" type="checkbox"> Food Included</label>
+                <label class="checkbox-label"><input asp-for="IsBridalBouquetIncluded" type="checkbox"> Bridal Bouquet Included</label>
+                <label class="checkbox-label"><input asp-for="IsFlowerArrangementIncluded" type="checkbox"> Flower Arrangement Included</label>
+            </div>
+            <!-- End checkbox section -->
+            <div class="form-field col-lg-6">
+                <label for="Price">Price</label>
+                <input asp-for="Price" id="Price" class="input-text js-input form-control" step="0.01" type="number" required>
+                <span asp-validation-for="Price" class="text-danger"></span>
+            </div>
+            <div class="form-field col-lg-12">
+                <input class="submit-btn btn btn-primary" type="submit" value="Submit">
+            </div>
+        </form>
+    </section>
+
+    <script>
+        $(document).ready(function () {
+            let selectedImages = [];
+
+            $('#ImageList').on('change', function (event) {
+                var input = event.target;
+
+                if (input.files) {
+                    Array.from(input.files).forEach(file => {
+                        selectedImages.push(file);
+                    });
+
+                    var previewContainer = $('#imagePreviewContainer');
+                    previewContainer.empty();
+
+                    selectedImages.forEach(file => {
+                        var reader = new FileReader();
+                        reader.onload = function (e) {
+                            var img = $('<img>').attr('src', e.target.result).addClass('img-thumbnail');
+                            previewContainer.append(img);
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                }
+            });
+
+            $('#partyServicesForm').on('submit', function (e) {
+                e.preventDefault();
+
+                var formData = new FormData(this);
+                formData.delete('ImageList');
+
+                if (selectedImages.length > 0) {
+                    selectedImages.forEach(file => {
+                        formData.append('ImageList', file);
+                    });
+                }
+
+                $.ajax({
+        url: '@Url.Action("AddPartyServices", "Account")',
+                            type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        console.log('Form submitted successfully!');
+                        window.location.href = '/YourController/GetAllService';
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Form submission failed: ' + error);
+                    }
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>

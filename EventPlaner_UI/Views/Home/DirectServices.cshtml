@@ -1,0 +1,428 @@
+﻿@using EventPlaner_UI.Helper;
+@using EventPlaner_UI.Helper.Loclizer;
+@using Microsoft.AspNetCore.Mvc.Localization;
+@using Newtonsoft.Json;
+@using System.Web
+@model DirectServiec;
+@inject IViewLocalizer LocalizationManager;
+
+@{
+   
+
+    ViewData["Title"] = LocalizationManager.GetString("RoyalEvent");
+    bool isEnglish = CultureHelper.IsEnglish;
+    var directServiec = Model;
+
+    // Determine icon and title based on the service
+    string title = "";
+    string icon = "";
+
+
+    if (directServiec != null)
+    {
+        switch (directServiec.ID)
+        {
+            case 5:
+                title = LocalizationManager["BookPhotographerTitle"].Value;
+                icon = "fa-camera-retro";
+                break;
+            case 8: 
+                title = LocalizationManager["ArabicZaffaTitle"].Value;
+                icon = "fa-drum icon";
+                break;
+            case 12:
+                title = LocalizationManager["FriendRequstTitel"].Value;
+                icon = "fa-user-group";
+                break;
+            default:
+                title = LocalizationManager["DefaultTitle"].Value;
+                icon = "fa-question-circle";
+                break;
+        }
+    }
+}
+ 
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <link href="~/assets/css/main.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri&family=Poppins:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+
+</head>
+<body dir="@CultureHelper.IsArabic ? 'rtl' : 'ltr'">
+
+    <form id="requestForm" style="border: 2px solid #729e92; margin: 158px 110px 110px 110px; padding: 20px;">
+
+   
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h5 style="color:#c3b49c">@title</h5>
+            <button type="button" id="closeModal" style="background: none; border: none; font-size: 24px; color: #c3b49c;">
+                <i class="fa-solid @icon"></i>
+            </button>
+        </div>
+
+
+
+
+        @if (directServiec.ID == 5 || directServiec.ID == 12)
+        {
+            <div class="form-group" >
+                @if (directServiec.ID == 5)
+                {
+                    <div style="text-align: @(isEnglish ? "left" : "right");">
+                        <label>@LocalizationManager["GenderLabel"]</label>
+                    </div>
+                 
+
+                    <div style="display: flex; align-items: center;">
+                        <div style="margin-right: 20px;">
+                            <label>
+                                <input type="radio" name="GenderPhotographer" value="1">@LocalizationManager["Male"]
+                            </label>
+                        </div>
+                        <div style="@(isEnglish ? "margin-right: 0px;" : "margin-right: 22px;")">
+                            <label >
+                                <input type="radio" name="GenderPhotographer" value="2">@LocalizationManager["Female"]
+                            </label>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div style="text-align: @(isEnglish ? "left" : "right");">
+                    <label >
+                        @LocalizationManager["GenderFriendLabel"] 
+                    </label>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <div style="margin-right: 20px;">
+                            <label>
+                                <input type="radio" name="GenderFreind" value="Male">@LocalizationManager["Male"]
+                            </label>
+                        </div>
+                        <div style="@(isEnglish ? "margin-right: 0px;" : "margin-right: 22px;")">
+                            <label>
+                                <input type="radio" name="GenderFreind" value="Female">@LocalizationManager["Female"]
+                            </label>
+                        </div>
+
+                    </div>
+                }
+                <input type="text" name="serviceName" value="@directServiec.ServiceNameEn" hidden>
+
+
+
+            </div>
+        }
+        else if (directServiec.ID == 8)
+        {
+            <script>
+                $(document).ready(function () {
+                    $('input[name="Gender"]').closest('.form-group').hide(); // Hide gender field
+                });
+            </script>
+        }
+        @if (directServiec.ID == 12)
+        {
+            <div class="form-group">
+                <div style="text-align: @(isEnglish ? "left" : "right");">
+                <label for="friendCount">@LocalizationManager["FriendCountLabel"]</label>
+                </div>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <button type="button" class="btn btn-outline-secondary" id="decrementCount" style="color: #729e92;">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                    <input type="text" class="form-control" id="count" name="CountOfFreind" value="1" readonly>
+                    <div class="input-group-append">
+                        <button type="button" class="btn btn-outline-secondary" id="incrementCount" style="color: #729e92;">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="form-group">
+            <div style="text-align: @(isEnglish ? "left" : "right");">
+            <label for="customerName" class="required ">@LocalizationManager["YourNameLabel"]</label>
+            </div>
+            <input type="text" class="form-control" id="customerName" name="CustomerName" placeholder="@LocalizationManager["EnterNamePlaceholder"]">
+        </div>
+        <div class="form-group">
+            <div style="text-align: @(isEnglish ? "left" : "right");">
+                <label for="phoneNumber" class="required" style="display: block; min-width: 150px;">@LocalizationManager["PhoneNumberLabel"]</label>
+            </div>
+            <div >
+                <input type="text" class="form-control" id="phoneNumber" name="PhoneNumber" style="display: block; width: 100%;" onchange="MobileError()" placeholder="@LocalizationManager["PhoneNumberPlaceholder"]" inputmode="numeric" pattern="[0-9]*">
+                <div style="text-align: @(isEnglish ? "left" : "right");">
+                    <span id="phoneNumbererror" class="error-message" style="color: red;"></span>
+                </div>
+                
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div style="text-align: @(isEnglish ? "left" : "right");">
+            <label for="cityId" class="required">@LocalizationManager["CityLabel"]</label>
+            </div>
+            <select class="form-control" id="cityId" name="CityId">
+                <option value="" disabled selected>@LocalizationManager["SelectCityPlaceholder"]</option>
+                <option value="1">@LocalizationManager["Amman"]</option>
+                <option value="2">@LocalizationManager["Irbid"]</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <div style="text-align: @(isEnglish ? "left" : "right");">
+            <label for="serviceType" class="required">@LocalizationManager["ServiceTypeLabel"]</label>
+            </div>
+            <select class="form-control" id="serviceType" name="ServiceType">
+                <option value="" disabled selected>@LocalizationManager["SelectServiceType"]</option>
+                <option value="Wedding">@LocalizationManager["Wedding"]</option>
+                <option value="Graduation">@LocalizationManager["Graduation"]</option>
+                <option value="Birthday">@LocalizationManager["Birthday"]</option>
+                <option value="Personal">@LocalizationManager["Personal"]</option>
+                <option value="Other">@LocalizationManager["Other"]</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <div style="text-align: @(isEnglish ? "left" : "right");">
+            <label for="startDate" class="required">@LocalizationManager["RequestDateLabel"]</label>
+            </div>
+            <input type="text" class="form-control" id="startDate" name="StartDate" placeholder="@LocalizationManager["SelectDatePlaceholder"]">
+        </div>
+        <div class="form-group">
+            <div style="text-align: @(isEnglish ? "left" : "right");">
+            <label for="note">@LocalizationManager["NoteLabel"]</label>
+            </div>
+            <textarea class="form-control" id="note" name="Note" placeholder="@LocalizationManager["WriteNotePlaceholder"]"></textarea>
+        </div>
+
+        <div style="margin-top: 20px; text-align: right;">
+            <button type="button" class="btn btn-secondary" id="closeModalBtn" onclick="window.location.href='@Url.Action("Index", "Home")'" style="background-color:#c3b49c;">@LocalizationManager["BackButtonText"]</button>
+            <button type="submit" class="btn btn-primary" style="background-color:#729e92;width: auto;">@LocalizationManager["SubmitButtonText"]</button>
+        </div>
+    </form>
+
+    <script>
+
+$(document).ready(function() {
+    $('#phoneNumber').on('keydown', function(event) {
+        if (!((event.key >= '0' && event.key <= '9') || event.key === 'Backspace' || event.key === 'Delete' || event.key === 'ArrowLeft' || event.key === 'ArrowRight' || event.key === 'Tab')) {
+            event.preventDefault(); 
+        }
+    });
+});
+
+      
+
+        document.addEventListener("DOMContentLoaded", function () {
+            var input = document.querySelector("#phoneNumber");
+
+            var iti = window.intlTelInput(input, {
+                preferredCountries: ["jo"], 
+                separateDialCode: true, 
+                initialCountry: "jo", 
+                geoIpLookup: function (callback) {
+                    callback("jo"); 
+                },
+            });
+
+            function toggleDirection() {
+              
+                    document.body.classList.add("rtl");
+             
+            }
+
+            
+        });
+
+
+      function MobileError() {
+    debugger;
+    const phoneNumber = document.getElementById('phoneNumber');
+    const errorSpan = document.getElementById('phoneNumbererror'); // Use getElementById
+
+    const phonePattern = /^(07\d{8}|7\d{8})$/; // Matches 07XXXXXXXX (10 digits) or 7XXXXXXXX (9 digits)
+            if (phoneNumber.value == '' || phoneNumber.value == undefined)
+            {
+                 phoneNumber.style.borderColor = "";
+                errorSpan.innerText = "";
+                return
+            }
+    if (!phonePattern.test(phoneNumber.value)) {
+        phoneNumber.style.borderColor = "red";
+        errorSpan.innerText = "@Html.Raw(HttpUtility.JavaScriptStringEncode(LocalizationManager.GetString("PhoneNumberValidationMessage")))"; // Use innerText
+    } else {
+        phoneNumber.style.borderColor = "";
+        errorSpan.innerText = ""; 
+    }
+}
+
+
+
+        flatpickr("#startDate", {
+            dateFormat: "d/m/Y h:i K",
+            minDate: new Date().fp_incr(1),
+            enableTime: true,
+            time_24hr: false,
+        });
+
+        $('#incrementCount').click(function () {
+            let count = parseInt($('#count').val());
+            $('#count').val(count + 1);
+        });
+
+        $('#decrementCount').click(function () {
+            let count = parseInt($('#count').val());
+            if (count > 1) {
+                $('#count').val(count - 1);
+            }
+        });
+        $('#requestForm').submit(function (e) {
+            e.preventDefault();
+            debugger
+
+            const serviceId = @directServiec.ID;
+
+            let isValid = true;
+            let errorMessages = [];
+
+            const customerName = document.getElementById('customerName');
+            if (!customerName.value.trim()) {
+                isValid = false;
+                customerName.style.borderColor = 'red';
+            } else {
+                customerName.style.borderColor = '';
+            }
+
+            const phoneNumber = document.getElementById('phoneNumber');
+            if (!phoneNumber.value.trim() || !/^\d+$/.test(phoneNumber.value.trim())) {
+                isValid = false;
+                phoneNumber.style.borderColor = 'red';
+            } else {
+
+
+                var phonePattern = /^(07\d{8}|7\d{8})$/; // Matches 07XXXXXXXX (10 digits) or 7XXXXXXXX (9 digits)
+
+                  const errorSpan = document.getElementById('phoneNumbererror'); 
+               
+                errorSpan.innerText ='';
+
+
+                if (!phonePattern.test(phoneNumber.value)) {
+                           errorSpan.innerText = "@Html.Raw(HttpUtility.JavaScriptStringEncode(LocalizationManager.GetString("PhoneNumberValidationMessage")))";
+                }
+                else{
+                            phoneNumber.style.borderColor = '';
+
+                }
+            }
+
+
+            const cityId = document.getElementById('cityId');
+            if (!cityId.value) {
+                isValid = false;
+                cityId.style.borderColor = 'red';
+            } else {
+                cityId.style.borderColor = '';
+            }
+
+            const serviceType = document.getElementById('serviceType');
+            if (!serviceType.value) {
+                isValid = false;
+                serviceType.style.borderColor = 'red';
+            } else {
+                serviceType.style.borderColor = '';
+            }
+
+            const startDate = document.getElementById('startDate');
+            if (!startDate.value.trim()) {
+                isValid = false;
+                startDate.style.borderColor = 'red';
+            } else {
+                startDate.style.borderColor = '';
+            }
+
+
+
+            if (serviceId === 5 || serviceId === 12) {
+                const genderFieldName = serviceId === 5 ? 'GenderPhotographer' : 'GenderFreind';
+                var textAlign = @Html.Raw(isEnglish ? "'left'" : "'right'"); 
+
+                if ($(`input[name="${genderFieldName}"]:checked`).length === 0) {
+                    var selectGenderErrorMessage = '@Html.Raw((LocalizationManager.GetString("SelectGenderError")))';
+
+                    $(`input[name="${genderFieldName}"]`)
+                        .closest('.form-group')
+                        .append(`<span class="error-message" style="color: red; display: block; text-align: ${textAlign};">${selectGenderErrorMessage}</span>`);
+                }
+            }
+            if (!isValid) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: '@Html.Raw((LocalizationManager.GetString("ValidationErrorTitle")))',
+                    text: '@Html.Raw((LocalizationManager.GetString("fieldsRequired")))',
+                    confirmButtonText: 'OK',
+                });
+                return;
+            }
+
+
+            const formData = {};
+            $(this).serializeArray().forEach(function (field) {
+                formData[field.name] = field.value;
+            });
+
+            $.ajax({
+                url: '@Url.Action("SubmitPartyForm", "Home")',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function (response) {
+                    $('#detailsModal').modal('hide');
+                    Swal.fire({
+                        icon: 'success',
+                        title: '@Html.Raw((LocalizationManager.GetString("RequestSubmittedTitle")))',
+                        text: '@Html.Raw((LocalizationManager.GetString("SuccessMessage")))',
+                        confirmButtonText: '@Html.Raw((LocalizationManager.GetString("ValidationErrorOkButton")))',
+                    });
+                    $('#requestForm')[0].reset();
+                },
+                error: function (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '@Html.Raw((LocalizationManager.GetString("SubmissionFailedTitle")))',
+                        text: '@Html.Raw((LocalizationManager.GetString("SubmissionFailedText"))) ',
+                        confirmButtonText: '@Html.Raw((LocalizationManager.GetString("ValidationErrorOkButton")))',
+                    });
+                }
+            });
+        });
+
+    </script>
+
+
+</body>
+
+</html>
+
+
